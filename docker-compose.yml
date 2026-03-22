@@ -1,7 +1,6 @@
 services:
     backend:
-        build:
-            context: ./backend
+        build: ./backend
         resart: unless-stopped
         labels:
             - traefik.enable=true
