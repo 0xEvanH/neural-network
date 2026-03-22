@@ -13,7 +13,7 @@ const W    = '#ffffff'
 const DIM  = 'rgba(255,255,255,0.38)'
 const LINE = 'rgba(255,255,255,0.08)'
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-const API   = 'http://localhost:5000'
+const API   = 'https://neural-api.evhsync.com'
 
 const SAMPLES: Record<PredictionClass, string> = {
   human: `Had the weirdest day yesterday. Was walking to get coffee and ended up in this tiny bookshop I've never noticed before - somehow it's been there for 20 years. The owner, this older guy named Frank, spent like an hour telling me about obscure 1970s science fiction. I bought three books I've never heard of and honestly I'm kind of excited? There's something about stumbling into a good conversation that you can't really plan for.`,
