@@ -1,0 +1,18 @@
+{
+  "name": "spam-ai-detector",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently --names \"API,UI\" --prefix-colors \"cyan,magenta\" \"bun run api\" \"bun run ui\"",
+    "api": "cd backend && py app.py",
+    "ui": "cd frontend && bun run dev",
+    "install:all": "cd frontend && bun install",
+    "typecheck": "cd frontend && bunx tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@types/three": "^0.183.1"
+  }
+}
