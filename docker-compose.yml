@@ -13,6 +13,8 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        - VITE_API_URL=https://neural-api.evhsync.com
     restart: unless-stopped
     labels:
       - traefik.enable=true
