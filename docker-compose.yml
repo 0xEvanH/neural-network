@@ -1,0 +1,21 @@
+services:
+    backend:
+        build:
+            context: ./backend
+        resart: unless-stopped
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.neural-backend.rule=Host('neural-api.evhsync.com')
+            - traefik.http.routers.neural-backend.tls=true
+            - traefik.http.routers.neural-backend.tls.certresolver=letsencrypt
+            - traefik.http.service.neural-backend.loadbalancer.server.port=5000
+    
+    frontend:
+        build: ./frontend
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - traefik.http.routers.neural-backend.rule=Host('neural.evhsync.com')
+        - traefik.http.routers.neural-backend.tls=true
+        - traefik.http.routers.neural-backend.tls.certresolver=letsencrypt
+        - traefik.http.service.neural-backend.loadbalancer.server.port=80
