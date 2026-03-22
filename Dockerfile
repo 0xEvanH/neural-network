@@ -1,6 +1,6 @@
 FROM oven/bun:1 AS base
 
-# System
+# System deps
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Backend
+# Python backend
 COPY backend/requirements.txt ./backend/requirements.txt
 
 RUN python3 -m venv /app/.venv && \
@@ -24,7 +24,7 @@ RUN cd frontend && bun install --frozen-lockfile
 
 COPY frontend/ ./frontend/
 
-
+# Supervisor config
 RUN mkdir -p /var/log/supervisor
 
 COPY <<'EOF' /etc/supervisor/conf.d/app.conf
@@ -43,7 +43,7 @@ stdout_logfile=/var/log/supervisor/api.out.log
 environment=PYTHONUNBUFFERED="1"
 
 [program:ui]
-command=bun run dev
+command=bun run dev --host 0.0.0.0 --port 5173
 directory=/app/frontend
 autostart=true
 autorestart=true
@@ -51,9 +51,8 @@ stderr_logfile=/var/log/supervisor/ui.err.log
 stdout_logfile=/var/log/supervisor/ui.out.log
 EOF
 
-# Backend
+# Ports
 EXPOSE 5000
-# Frontend
 EXPOSE 5173
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
