@@ -9,10 +9,6 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-# ─────────────────────────────────────────────
-#  Feature extraction
-# ─────────────────────────────────────────────
-
 SPAM_KEYWORDS = [
     "free", "win", "winner", "cash", "prize", "congratulations", "click here",
     "buy now", "limited offer", "act now", "urgent", "guaranteed", "risk-free",
@@ -47,7 +43,6 @@ def extract_features(text: str) -> dict:
     avg_word_len = np.mean([len(w) for w in words]) if words else 0
     avg_sentence_len = word_count / sentence_count
 
-    # Spam signals
     spam_hits = [kw for kw in SPAM_KEYWORDS if kw in text_lower]
     spam_keyword_ratio = len(spam_hits) / max(word_count, 1)
     exclamation_ratio = text.count('!') / max(char_count, 1)
@@ -57,20 +52,16 @@ def extract_features(text: str) -> dict:
     digit_ratio = sum(1 for c in text if c.isdigit()) / max(char_count, 1)
     repeated_punct = len(re.findall(r'[!?]{2,}', text))
 
-    # AI signals
     ai_hits = [p for p in AI_PATTERNS if p in text_lower]
     ai_phrase_ratio = len(ai_hits) / max(word_count, 1) * 10
     type_token_ratio = len(set(words)) / max(word_count, 1)
 
-    # Vocabulary sophistication
     long_words = [w for w in words if len(w) > 8]
     long_word_ratio = len(long_words) / max(word_count, 1)
 
-    # Sentence length variance
     sent_lens = [len(re.findall(r'\b\w+\b', s)) for s in sentences]
     sent_variance = np.var(sent_lens) if len(sent_lens) > 1 else 0
 
-    # Punctuation diversity
     punct_types = len(set(c for c in text if c in '.,;:!?-()[]{}"\'-'))
 
     return {
@@ -95,9 +86,6 @@ def extract_features(text: str) -> dict:
         "ai_phrases_found": ai_hits[:6],
     }
 
-# ─────────────────────────────────────────────
-#  Neural Network (NumPy, from scratch)
-# ─────────────────────────────────────────────
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
@@ -110,12 +98,8 @@ def softmax(x):
     return e / e.sum()
 
 class NeuralNet:
-    """3-class neural network: HUMAN(0), AI(1), SPAM(2)"""
-
     def __init__(self):
         np.random.seed(42)
-        # Input: 14 numerical features
-        # Architecture: 14 → 32 → 16 → 3
         self.W1 = np.random.randn(14, 32) * 0.1
         self.b1 = np.zeros(32)
         self.W2 = np.random.randn(32, 16) * 0.1
@@ -125,7 +109,6 @@ class NeuralNet:
         self._pretrain()
 
     def _pretrain(self):
-        """Inject domain knowledge via synthetic training."""
         import time
         samples = self._generate_synthetic_data(1500)
         lr = 0.02
@@ -138,7 +121,6 @@ class NeuralNet:
             if epoch == 40: lr = 0.008
             if epoch == 75: lr = 0.002
 
-            # Progress bar
             pct     = (epoch + 1) / total
             filled  = int(30 * pct)
             bar     = "#" * filled + "-" * (30 - filled)
@@ -149,81 +131,55 @@ class NeuralNet:
                   f"elapsed={elapsed:.1f}s  "
                   f"eta={eta:.1f}s   ",
                   end="", flush=True)
-        print()  # newline after training completes
+        print()
 
     def _generate_synthetic_data(self, n):
-        """
-        Generate pre-normalised feature vectors in the SAME [0,1] scale
-        that _feature_vector() produces at inference time.
-
-        Feature order (14 dims):
-          0  char_count   / 2000   (clipped 0-1)
-          1  word_count   / 500
-          2  sentence_cnt / 30
-          3  avg_word_len / 10
-          4  avg_sent_len / 40
-          5  spam_kw_ratio * 20
-          6  excl_ratio   * 100
-          7  caps_ratio   * 5
-          8  url_count    / 5
-          9  dollar_signs / 5
-         10  digit_ratio  * 10
-         11  repeated_pct / 5
-         12  ai_phrase_ratio (already 0-1)
-         13  type_token_ratio (already 0-1)
-        """
         data = []
         rng = np.random.default_rng(42)
         U = lambda lo, hi: float(rng.uniform(lo, hi))
         per = n // 3
 
         for _ in range(per):
-            # ── HUMAN ──────────────────────────────────────────────────────
-            # Moderate length, low caps, low spam, medium TTR, varied sentences
             wc = rng.uniform(50, 300)
             x = np.array([
-                min(wc * rng.uniform(4.5, 6.5) / 2000, 1),   # 0 char/2000
-                min(wc / 500, 1),                              # 1 word/500
-                min(rng.uniform(3, 18) / 30, 1),               # 2 sent/30
-                U(0.35, 0.62),                                  # 3 awl/10
-                min(rng.uniform(10, 25) / 40, 1),              # 4 asl/40
-                U(0.0,  0.04),                                  # 5 spam *20
-                U(0.0,  0.012),                                 # 6 excl *100
-                U(0.0,  0.10),                                  # 7 caps *5
-                U(0.0,  0.10),                                  # 8 url/5
-                U(0.0,  0.02),                                  # 9 dollar/5
-                U(0.0,  0.08),                                  # 10 digit*10
-                U(0.0,  0.04),                                  # 11 rpunct/5
-                U(0.0,  0.04),                                  # 12 ai_phrase
-                U(0.55, 0.85),                                  # 13 ttr
+                min(wc * rng.uniform(4.5, 6.5) / 2000, 1),
+                min(wc / 500, 1),
+                min(rng.uniform(3, 18) / 30, 1),
+                U(0.35, 0.62),
+                min(rng.uniform(10, 25) / 40, 1),
+                U(0.0,  0.04),
+                U(0.0,  0.012),
+                U(0.0,  0.10),
+                U(0.0,  0.10),
+                U(0.0,  0.02),
+                U(0.0,  0.08),
+                U(0.0,  0.04),
+                U(0.0,  0.04),
+                U(0.55, 0.85),
             ], dtype=float)
             data.append((np.clip(x, 0, 1), 0))
 
         for _ in range(per):
-            # ── AI ─────────────────────────────────────────────────────────
-            # High TTR, many long words, AI phrases, uniform sentence length
             wc = rng.uniform(100, 500)
             x = np.array([
                 min(wc * rng.uniform(5.5, 7.0) / 2000, 1),
                 min(wc / 500, 1),
                 min(rng.uniform(4, 22) / 30, 1),
-                U(0.50, 0.78),                                  # longer words
-                min(rng.uniform(18, 35) / 40, 1),              # longer sentences
-                U(0.0,  0.015),                                 # almost no spam kw
-                U(0.0,  0.003),                                 # very few !
-                U(0.0,  0.05),                                  # low caps
-                U(0.0,  0.04),                                  # few urls
+                U(0.50, 0.78),
+                min(rng.uniform(18, 35) / 40, 1),
+                U(0.0,  0.015),
+                U(0.0,  0.003),
+                U(0.0,  0.05),
+                U(0.0,  0.04),
                 U(0.0,  0.01),
                 U(0.0,  0.04),
                 U(0.0,  0.02),
-                U(0.10, 1.00),                                  # HIGH ai phrases
-                U(0.72, 1.00),                                  # HIGH ttr
+                U(0.10, 1.00),
+                U(0.72, 1.00),
             ], dtype=float)
             data.append((np.clip(x, 0, 1), 1))
 
         for _ in range(per):
-            # ── SPAM ───────────────────────────────────────────────────────
-            # High caps, lots of !, spam keywords, urls, dollar signs
             wc = rng.uniform(15, 120)
             x = np.array([
                 min(wc * rng.uniform(4.0, 6.0) / 2000, 1),
@@ -231,15 +187,15 @@ class NeuralNet:
                 min(rng.uniform(1, 10) / 30, 1),
                 U(0.25, 0.55),
                 min(rng.uniform(5, 20) / 40, 1),
-                U(0.25, 1.00),                                  # HIGH spam kw*20
-                U(0.10, 1.00),                                  # HIGH excl*100
-                U(0.30, 1.00),                                  # HIGH caps*5
-                U(0.10, 1.00),                                  # URLs
-                U(0.05, 1.00),                                  # dollar signs
+                U(0.25, 1.00),
+                U(0.10, 1.00),
+                U(0.30, 1.00),
+                U(0.10, 1.00),
+                U(0.05, 1.00),
                 U(0.05, 0.50),
-                U(0.05, 1.00),                                  # repeated punct
+                U(0.05, 1.00),
                 U(0.0,  0.03),
-                U(0.35, 0.72),                                  # lower ttr
+                U(0.35, 0.72),
             ], dtype=float)
             data.append((np.clip(x, 0, 1), 2))
 
@@ -309,14 +265,10 @@ class NeuralNet:
         }, activations
 
 
-# Initialise model once at startup
 print("Training neural network...")
 model = NeuralNet()
 print("Model ready")
 
-# ─────────────────────────────────────────────
-#  API Routes
-# ─────────────────────────────────────────────
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -340,7 +292,6 @@ def analyze():
     predicted_label = label_map[predicted_idx]
     confidence = max(probabilities.values())
 
-    # Build explanation
     signals = []
     if features["spam_keywords_found"]:
         signals.append(f"Spam keywords: {', '.join(features['spam_keywords_found'][:5])}")
