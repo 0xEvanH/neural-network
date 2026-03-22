@@ -1,6 +1,8 @@
 services:
     backend:
-        build: ./backend
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
         resart: unless-stopped
         labels:
             - traefik.enable=true
@@ -10,7 +12,9 @@ services:
             - traefik.http.service.neural-backend.loadbalancer.server.port=5000
     
     frontend:
-        build: ./frontend
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
     restart: unless-stopped
     labels:
         - traefik.enable=true
